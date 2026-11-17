@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#1F3864">
+<title>冷链路 · 访后报告</title>
+<style>
+  :root{--navy:#1F3864;--blue:#2E5496;--ink:#22262E;--grey:#6B7280;--line:#E3E8F0;--bg:#F4F6FA;--soft:#EEF3FB;--red:#D0342C;--green:#1E7B3C}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif}
+  body{padding-bottom:env(safe-area-inset-bottom);overflow-x:hidden}
+  .wrap{max-width:720px;margin:0 auto;padding:18px 14px 40px}
+  header{padding:6px 2px 14px}
+  h1{font-size:20px;margin:0;color:var(--navy);letter-spacing:.5px}
+  .sub{font-size:12px;color:var(--grey);margin-top:5px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:16px;margin-bottom:12px;box-shadow:0 1px 2px rgba(20,30,50,.04)}
+  .card h2{font-size:13px;color:var(--navy);margin:0 0 12px;letter-spacing:.3px;display:flex;justify-content:space-between;align-items:center}
+  .card h2 span{font-weight:400;color:var(--grey);font-size:11px}
+  label{display:block;font-size:12px;color:var(--grey);margin:11px 0 5px}
+  input,select{width:100%;min-width:0;border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:16px;background:#FBFCFE;outline:none;font-family:inherit;color:var(--ink)}
+  input:focus,select:focus{border-color:var(--blue);background:#fff}
+  .row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px}
+  .btn{display:block;width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-weight:600;color:#fff;background:var(--navy);cursor:pointer;margin-top:12px;font-family:inherit}
+  .btn:active{opacity:.85}
+  .btn:disabled{background:#AEB8C8}
+  .btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--line);font-weight:500;font-size:13px;padding:11px}
+  .hint{font-size:11.5px;color:var(--grey);line-height:1.7;margin-top:9px}
+  .hint.green{color:var(--green)}
+  .hint.red{color:var(--red)}
+  .keychip{display:none;font-size:12px;color:var(--green);background:#F1F9F3;border:1px solid #CFE8D6;border-radius:8px;padding:8px 10px}
+  .keychip.show{display:block}
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:5px;background:#EDF0F6;padding:4px;border-radius:10px;margin:4px 0 2px}
+  .mode{border:0;background:transparent;border-radius:8px;padding:10px 4px;font-size:13px;color:var(--grey);cursor:pointer;font-family:inherit}
+  .mode.on{background:#fff;color:var(--navy);font-weight:600}
+  .recwrap{text-align:center;padding:6px 0 2px}
+  .recbtn{width:96px;height:96px;border-radius:50%;border:0;background:var(--navy);color:#fff;font-size:13px;font-weight:600;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;margin:0 auto;cursor:pointer;box-shadow:0 6px 18px rgba(31,56,100,.25)}
+  .recbtn .dot{width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s}
+  .recbtn.rec{background:var(--red);animation:pulse 1.6s infinite}
+  .recbtn.rec .dot{border-radius:4px;width:18px;height:18px}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(208,52,44,.35)}50%{box-shadow:0 0 0 16px rgba(208,52,44,0)}}
+  .timer{font-size:26px;font-variant-numeric:tabular-nums;margin-top:12px;color:var(--navy);letter-spacing:1px}
+  .recmeta{font-size:11.5px;color:var(--grey);margin-top:4px}
+  .prog{display:none;margin-top:14px}
+  .prog.show{display:block}
+  .bar{height:6px;background:#EDF0F6;border-radius:4px;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2E5496,#4A7BC8);transition:width .3s}
+  .stage{font-size:12px;color:var(--grey);margin-top:7px;display:flex;justify-content:space-between;gap:8px}
+  .err{display:none;background:#FDEDEB;color:var(--red);border:1px solid #F5C6C0;border-radius:10px;padding:11px 12px;font-size:12.5px;line-height:1.65;margin-top:10px}
+  .err.show{display:block}
+  .result{display:none}
+  .result.show{display:block}
+  .pre{white-space:pre-wrap;font-size:14px;line-height:1.75;background:#FBFCFE;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:10px;max-height:60vh;overflow:auto}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .actions .btn{margin:0;font-size:14px;padding:12px}
+  details.help{margin-top:4px}
+  details.help summary{font-size:12px;color:var(--grey);padding:6px 0;cursor:pointer}
+  details.help p{font-size:12px;color:var(--grey);line-height:1.8;margin:6px 0}
+  .foot{text-align:center;font-size:11px;color:#9AA5B5;margin-top:18px;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>冷链路 · 访后报告<span style="font-size:11px;color:#8C8C8C;font-weight:400">　手机版</span></h1>
+    <div class="sub" id="net">本机运行 · 录音只发往 DeepSeek</div>
+  </header>
+
+  <!-- Key -->
+  <div class="card" id="keycard">
+    <h2>01　DeepSeek Key <span id="keyState">未设置</span></h2>
+    <div class="keychip" id="keyChip">Key 已保存，可直接录音。<a href="#" id="changeKey" style="color:#2E5496;margin-left:8px">更换</a></div>
+    <div id="keyForm">
+      <label>粘贴以 sk- 开头的一整串</label>
+      <input id="key" type="password" placeholder="sk-..." autocomplete="off">
+      <button class="btn ghost" id="saveKey">保存并验证</button>
+      <div class="hint" id="keyHint">只存在这台手机的浏览器里，不会上传到别处。</div>
+    </div>
+  </div>
+
+  <!-- 客户卡 -->
+  <div class="card">
+    <h2>02　客户卡 <span>只填店名也行</span></h2>
+    <label>店名</label>
+    <input id="store" placeholder="例：文志家具城">
+    <div class="row">
+      <div>
+        <label>预判层级</label>
+        <select id="level">
+          <option value="">未判</option>
+          <option>A 高端店</option>
+          <option>B 大众店</option>
+          <option>C 二手商</option>
+        </select>
+      </div>
+      <div>
+        <label>主力价位</label>
+        <input id="price" placeholder="例：300～500">
+      </div>
+    </div>
+    <label>决策人</label>
+    <input id="decision" placeholder="例：王老板，本人管进货">
+  </div>
+
+  <!-- 录音 -->
+  <div class="card">
+    <h2>03　录音 <span id="segInfo"></span></h2>
+    <div class="recwrap">
+      <button class="recbtn" id="rec"><span class="dot"></span><span id="recLabel">开始录音</span></button>
+      <div class="timer" id="timer">00:00</div>
+      <div class="recmeta" id="recMeta">录音时请保持屏幕常亮，不要切到别的 App</div>
+    </div>
+
+    <button class="btn ghost" id="pickFile" style="margin-top:12px">已有录音？点这里选文件</button>
+    <input type="file" id="file" accept="audio/*,.m4a,.mp3,.wav,.aac,.ogg" hidden>
+    <div class="hint" id="fileHint">手机直接录音最稳；选文件建议不超过 15 分钟。</div>
+
+    <div class="prog" id="prog">
+      <div class="bar"><i id="bar"></i></div>
+      <div class="stage"><span id="stage">准备中…</span><span id="pct"></span></div>
+    </div>
+    <div class="err" id="err"></div>
+  </div>
+
+  <!-- 报告 -->
+  <div class="card result" id="result">
+    <h2>04　报告 <span id="savedTag"></span></h2>
+    <div class="pre" id="report"></div>
+    <div class="actions">
+      <button class="btn" id="copy">复制报告</button>
+      <button class="btn" id="share">分享 / 存到文件</button>
+    </div>
+    <button class="btn ghost" id="again" style="margin-top:8px">再录一场</button>
+  </div>
+
+  <details class="help">
+    <summary>怎么加到手机桌面？</summary>
+    <p><b>iPhone：</b>Safari 打开本页 → 底部「分享」→「添加到主屏幕」。</p>
+    <p><b>安卓：</b>Chrome 打开本页 → 右上角三个点 →「添加到主屏幕」。</p>
+    <p>录音时手机屏幕要保持亮着（设置 → 显示 → 自动锁定 → 永不），不要切到微信或别的 App，否则录音会停。</p>
+  </details>
+
+  <div class="foot">录音只发往 DeepSeek 做转写与报告<br>建议一次不超过 60 分钟</div>
+</div>
+
+<script type="text/plain" id="p-brief">
+你是奈曼旗「冷链路」项目的销售教练，熟悉《冷链路店主分层话术与入口行动卡》和《下去营销摸底话术卡（含极简分润）》。我会给你三样材料：
+
+1）客户卡（店名、预判层级、决策人、主力价位、经营特征）；
+2）一场店主拜访的语音转写（可能有错别字、口语、方言、说话人串行）；
+3）访谈者事后 60 秒的直觉复盘。
+
+【内部口径，只用于你判断，不要在报告里向客户复述】
+
+· 产品：餐桌，客户实付恒等于 368 元（送到家、搬上楼、装好），全案没有第二个价。
+· 分润四行：报信带人 20（公司组员接手谈成给 10）；摆样讲解协助 35（展示20/讲解10/协助5）；
+  送货搬楼安装 55（到户20/入户20/安装12/完成3）；寄仓 17。
+  四类全干一单最多 127；加回访 9，单人单笔封顶 136。对客户只讲 368。
+· 分层：A 高端店（主力价明显高于 368，参考 800 元以上）只调研不合作；
+  B 大众店（预算敏感 / 不冲突品类 / 愿登记）谈看样点；
+  C 二手商（兼营新品 + 自有货车 + 至少一名帮手 + 本地三年 + 有院落）四行全谈。
+· 否决硬杠：联系不上或拒不签字；要求先交钱、压货、交入门费；明确不配合登记留痕。
+· 红线：368 不改价；货款扫公司码进公司账；介绍费只一层；不说「返利/抽成/下线/拉人头/躺赚」；
+  不承诺方案外的东西，被问住说「明天给您准话」。
+
+【输出要求】
+
+· 只依据转写里真实出现的内容，不得编造。关键判断后必须用「原话：」引用一句店主原话。
+· 严格区分「店主说的」和「你推断的」，推断标「推断」。信息不足写「未获取」。
+· 说话人 1 是访谈者，说话人 2 是店主。
+
+【报告结构 · 精简版】
+全文控制在 600～900 字，必须能在一页内看完。不要写导语、不要写总结。
+
+一、结论（不超过 3 行）
+他最在意的是 ______，不是 ______。
+判定：___ 层（依据：______）；意向：强 / 中 / 无；决策人：已确认 / 未确认。
+
+二、三个关键信号
+只选最强的三条，每条一行：信号类型 + 原话 + 强度 1-5。
+信号类型只能从：价格与账期、断冷/损耗、配送与安装、货源稳定、竞品、决策链、信任、政策补贴 里选。
+
+三、触动他的那句话
+你：「______」→ 他：「______」（反应类型，强度）。
+
+四、话术自检（只写有问题的，没问题就写「无」）
+决策人确认 / 总额前置 / 只念相关行 / 禁词 / 方案外承诺。
+
+五、下一步（24 小时内，最多 3 条）
+每条都要具体到「做什么、发给谁」。
+
+六、风险（只列命中的红线，没有就写「未命中」）
+
+最后一行：再问一个问题：「______」
+</script>
+
+<script>
+(function(){
+  "use strict";
+  const API="https://api.deepseek.com";
+  const MODELS=["deepseek-flash","deepseek-chat"];
+  const SEG=100;                 // 每段录音秒数
+  const CHUNK=110;               // 送 ASR 的秒数上限
+  const $=s=>document.querySelector(s);
+  const keyStore={
+    get:()=>localStorage.getItem("ll_key")||"",
+    set:v=>localStorage.setItem("ll_key",v)
+  };
+  let stream=null, mr=null, recording=false, segments=[], segTimer=null, tick=null;
+  let startedAt=0, wakeLock=null, busy=false;
+
+  function fmt(sec){const m=String(Math.floor(sec/60)).padStart(2,"0");const s=String(sec%60).padStart(2,"0");return m+":"+s;}
+  function showErr(msg){const e=$("#err");e.textContent=msg;e.classList.add("show");}
+  function clearErr(){$("#err").classList.remove("show");}
+  function setProg(pct,text){
+    $("#prog").classList.add("show");
+    $("#bar").style.width=Math.max(2,Math.min(100,pct))+"%";
+    $("#stage").textContent=text||"";
+    $("#pct").textContent=Math.round(pct)+"%";
+  }
+  function hideProg(){$("#prog").classList.remove("show");}
+
+  // ---------- Key ----------
+  function paintKey(){
+    const k=keyStore.get();
+    $("#keyState").textContent = k ? "已保存" : "未设置";
+    $("#keyChip").classList.toggle("show", !!k);
+    $("#keyForm").style.display = k ? "none" : "block";
+  }
+  $("#saveKey").addEventListener("click", async ()=>{
+    const v=$("#key").value.trim();
+    if(!v){$("#keyHint").textContent="请先粘贴 sk- 开头的 Key";return;}
+    keyStore.set(v);
+    $("#keyHint").textContent="正在验证…";
+    try{
+      const r=await fetch(API+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+v},
+        body:JSON.stringify({model:MODELS[0],messages:[{role:"user",content:"只回复两个字：可用"}],max_tokens:8})});
+      if(r.ok){paintKey();}
+      else{const t=await r.text();$("#keyHint").textContent="验证失败："+friendly(r.status,t);$("#keyHint").className="hint red";}
+    }catch(e){$("#keyHint").textContent="连不上 DeepSeek，检查网络。";}
+  });
+  paintKey();
+  $("#changeKey").addEventListener("click",e=>{
+    e.preventDefault();
+    localStorage.removeItem("ll_key");
+    $("#key").value="";
+    paintKey();
+    $("#keyHint").textContent="粘贴新的 Key，再点保存。";
+    $("#keyHint").className="hint";
+  });
+
+  // 客户卡缓存
+  ["store","level","price","decision"].forEach(id=>{
+    const el=$("#"+id);
+    el.value=localStorage.getItem("ll_"+id)||"";
+    el.addEventListener("change",()=>localStorage.setItem("ll_"+id,el.value));
+    el.addEventListener("input",()=>localStorage.setItem("ll_"+id,el.value));
+  });
+
+  // ---------- 录音 ----------
+  function pickMime(){
+    if(!window.MediaRecorder) return "";
+    const list=["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus"];
+    for(const m of list){try{if(MediaRecorder.isTypeSupported(m))return m;}catch(e){}}
+    return "";
+  }
+
+  $("#rec").addEventListener("click", async ()=>{
+    if(busy) return;
+    if(!keyStore.get()){showErr("先在上面填 DeepSeek Key。");$("#keycard").scrollIntoView({behavior:"smooth"});return;}
+    if(!recording) await startRec(); else stopRec();
+  });
+
+  async function startRec(){
+    clearErr();
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+      showErr("这个浏览器不支持录音。iPhone 请用 Safari，安卓请用 Chrome。");return;
+    }
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,channelCount:1}});
+    }catch(e){
+      showErr("麦克风打不开："+(e.message||"请在浏览器设置里允许麦克风"));return;
+    }
+    segments=[];recording=true;startedAt=Date.now();
+    $("#rec").classList.add("rec");$("#recLabel").textContent="结束并生成";
+    $("#recMeta").textContent="正在录音，保持屏幕常亮";
+    $("#result").classList.remove("show");
+    tick=setInterval(()=>{
+      $("#timer").textContent=fmt(Math.floor((Date.now()-startedAt)/1000));
+    },500);
+    try{ if("wakeLock" in navigator) wakeLock=await navigator.wakeLock.request("screen"); }catch(e){}
+    startSegment();
+  }
+
+  function startSegment(){
+    const mime=pickMime();
+    let opts={};
+    if(mime) opts={mimeType:mime};
+    try{ mr=new MediaRecorder(stream, opts); }catch(e){ showErr("这台手机不支持录音："+e.message); return; }
+    const parts=[];
+    mr.ondataavailable=e=>{ if(e.data&&e.data.size) parts.push(e.data); };
+    mr.onstop=async ()=>{
+      const type=mr.mimeType||"audio/mp4";
+      if(parts.length){
+        const b=new Blob(parts,{type:type});
+        if(b.size>2000) segments.push(b);
+      }
+      $("#segInfo").textContent=segments.length?("已录 "+segments.length+" 段"):"";
+      if(recording){ startSegment(); }
+      else{ await finishRec(); }
+    };
+    mr.start();
+    segTimer=setTimeout(()=>{ try{ if(mr.state==="recording") mr.stop(); }catch(e){} }, SEG*1000);
+  }
+
+  function stopRec(){
+    if(!recording) return;
+    recording=false;
+    clearInterval(tick);clearTimeout(segTimer);
+    if(wakeLock){try{wakeLock.release();}catch(e){}wakeLock=null;}
+    $("#rec").classList.remove("rec");$("#recLabel").textContent="处理中…";
+    $("#recMeta").textContent="正在收尾…";
+    if(mr&&mr.state==="recording") mr.stop();
+  }
+
+  async function finishRec(){
+    if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+    $("#recLabel").textContent="开始录音";
+    if(!segments.length){showErr("没有录到声音，再试一次。");return;}
+    await processAll(segments.slice());
+  }
+
+  // ---------- 文件 ----------
+  $("#pickFile").addEventListener("click",()=>$("#file").click());
+  $("#file").addEventListener("change",async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    if(!keyStore.get()){showErr("先填 DeepSeek Key。");return;}
+    let dur=0;
+    try{ dur=await getDuration(f); }catch(err){}
+    if(dur>900){
+      showErr("这段录音约 "+Math.round(dur/60)+" 分钟，手机内存处理不了。请用手机直接录，或回到电脑版处理。");
+      return;
+    }
+    clearErr();
+    await processAll([f]);
+  });
+
+  function getDuration(file){
+    return new Promise((res,rej)=>{
+      const a=document.createElement("audio");
+      a.preload="metadata";
+      a.onloadedmetadata=()=>{URL.revokeObjectURL(a.src);res(a.duration||0);};
+      a.onerror=()=>rej(new Error("读不出时长"));
+      a.src=URL.createObjectURL(file);
+    });
+  }
+
+  // ---------- 处理 ----------
+  async function processAll(blobs){
+    busy=true;clearErr();$("#result").classList.remove("show");
+    $("#rec").disabled=true;
+    try{
+      let texts=[];
+      for(let i=0;i<blobs.length;i++){
+        setProg(i/blobs.length*80, "转写第 "+(i+1)+"/"+blobs.length+" 段…");
+        const wavs=await toWavChunks(blobs[i]);
+        for(let j=0;j<wavs.length;j++){
+          texts.push(await asr(wavs[j]));
+        }
+      }
+      const transcript=texts.filter(t=>t&&t.trim()).join("\n").trim();
+      if(!transcript) throw new Error("没有识别到文字，检查一下录音音量。");
+      setProg(85,"正在生成报告（约 30 秒）…");
+      const report=await chat(transcript);
+      setProg(100,"完成");
+      showReport(report, transcript);
+    }catch(e){
+      showErr(e.message||"出错了，再试一次。");
+      hideProg();
+    }finally{
+      busy=false;$("#rec").disabled=false;$("#recLabel").textContent="开始录音";
+    }
+  }
+
+  async function toWavChunks(blob){
+    const ab=await blob.arrayBuffer();
+    const Off=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+    const Ctx=window.AudioContext||window.webkitAudioContext;
+    let ctx;
+    try{ ctx=new Off(1,1,16000); }
+    catch(e){ try{ ctx=new Ctx({sampleRate:16000}); }catch(_){ ctx=new Ctx(); } }
+    let buf;
+    try{
+      buf=await Promise.race([
+        ctx.decodeAudioData(ab),
+        new Promise(function(_,rej){setTimeout(function(){rej(new Error("音频解码超时，换一段短一点的录音试试。"));},20000);})
+      ]);
+    }
+    catch(e){ try{ctx.close&&ctx.close();}catch(_){} throw new Error("这段音频解不开，可能格式不支持。"); }
+    const mono=mixMono(buf);
+    const data=resample(mono, buf.sampleRate, 16000);
+    try{ctx.close&&ctx.close();}catch(_){}
+    const per=16000*CHUNK, out=[];
+    for(let i=0;i<data.length;i+=per){
+      out.push(encodeWav(data.subarray(i,Math.min(i+per,data.length)),16000));
+    }
+    if(!out.length) throw new Error("这段音频是空的。");
+    return out;
+  }
+
+  function mixMono(buf){
+    if(buf.numberOfChannels===1) return buf.getChannelData(0);
+    const l=buf.getChannelData(0), r=buf.getChannelData(1);
+    const o=new Float32Array(l.length);
+    for(let i=0;i<l.length;i++) o[i]=(l[i]+r[i])/2;
+    return o;
+  }
+
+  function resample(data, from, to){
+    if(from===to) return data;
+    const ratio=to/from, n=Math.floor(data.length*ratio), out=new Float32Array(n);
+    for(let i=0;i<n;i++){
+      const x=i/ratio, i0=Math.floor(x), i1=Math.min(i0+1,data.length-1), f=x-i0;
+      out[i]=data[i0]*(1-f)+data[i1]*f;
+    }
+    return out;
+  }
+
+  function encodeWav(samples, rate){
+    const buffer=new ArrayBuffer(44+samples.length*2);
+    const v=new DataView(buffer);
+    const str=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
+    str(0,"RIFF");v.setUint32(4,36+samples.length*2,true);str(8,"WAVE");
+    str(12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+    v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);
+    str(36,"data");v.setUint32(40,samples.length*2,true);
+    let o=44;
+    for(let i=0;i<samples.length;i++,o+=2){
+      let s=Math.max(-1,Math.min(1,samples[i]));
+      v.setInt16(o, s<0?s*0x8000:s*0x7FFF, true);
+    }
+    return new Blob([v],{type:"audio/wav"});
+  }
+
+  function friendly(code,text){
+    const t=(text||"").toLowerCase();
+    if(code===401) return "Key 无效：检查是否复制完整，或这个 Key 已被删除。";
+    if(code===402||t.indexOf("insufficient")>=0||t.indexOf("balance")>=0) return "余额不足：去 platform.deepseek.com 充值。";
+    if(code===429) return "请求太频繁，等一分钟再试。";
+    return "请求失败（"+code+"）："+(text||"").slice(0,120);
+  }
+
+  async function asr(wavBlob){
+    const fd=new FormData();
+    fd.append("file",wavBlob,"audio.wav");
+    const r=await fetch(API+"/v1/tools/asr",{method:"POST",headers:{"Authorization":"Bearer "+keyStore.get()},body:fd});
+    if(!r.ok){ const t=await r.text(); throw new Error(friendly(r.status,t)); }
+    const j=await r.json();
+    return (j.text||"").trim();
+  }
+
+  function cardText(){
+    const g=id=>($("#"+id).value||"").trim();
+    const lines=["【客户卡】"];
+    if(g("store"))lines.push("店名："+g("store"));
+    if(g("level"))lines.push("预判层级："+g("level"));
+    if(g("decision"))lines.push("决策人："+g("decision"));
+    if(g("price"))lines.push("主力价位："+g("price"));
+    return lines.join("\n");
+  }
+
+  async function chat(transcript){
+    const sys=document.getElementById("p-brief").textContent;
+    const user=cardText()+"\n\n【访谈转写】\n"+transcript;
+    let last="";
+    for(const m of MODELS){
+      const r=await fetch(API+"/chat/completions",{method:"POST",
+        headers:{"Content-Type":"application/json","Authorization":"Bearer "+keyStore.get()},
+        body:JSON.stringify({model:m,temperature:0.3,messages:[{role:"system",content:sys},{role:"user",content:user}]})});
+      if(r.ok){ const j=await r.json(); return j.choices[0].message.content; }
+      const t=await r.text(); last=friendly(r.status,t);
+      if(r.status===400||r.status===404) continue;
+      break;
+    }
+    throw new Error(last||"生成报告失败");
+  }
+
+  // ---------- 展示 ----------
+  let reportText="";
+  function showReport(report, transcript){
+    reportText=report;
+    $("#report").textContent=report;
+    $("#result").classList.add("show");
+    $("#savedTag").textContent=new Date().toLocaleString("zh-CN");
+    $("#result").scrollIntoView({behavior:"smooth"});
+    try{ localStorage.setItem("ll_last_report",report); }catch(e){}
+  }
+
+  $("#copy").addEventListener("click",async ()=>{
+    try{ await navigator.clipboard.writeText(reportText); $("#copy").textContent="已复制"; }
+    catch(e){ $("#copy").textContent="复制失败"; }
+    setTimeout(()=>$("#copy").textContent="复制报告",1600);
+  });
+
+  $("#share").addEventListener("click",async ()=>{
+    const name=($("#store").value||"访后报告")+"_"+new Date().toISOString().slice(0,10)+".txt";
+    const file=new File([reportText],name,{type:"text/plain"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file],title:"访后报告"}); return; }catch(e){}
+    }
+    if(navigator.share){
+      try{ await navigator.share({text:reportText,title:"访后报告"}); return; }catch(e){}
+    }
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob([reportText],{type:"text/plain;charset=utf-8"}));
+    a.download=name;a.click();URL.revokeObjectURL(a.href);
+  });
+
+  $("#again").addEventListener("click",()=>{
+    $("#result").classList.remove("show");
+    $("#timer").textContent="00:00";
+    $("#segInfo").textContent="";
+    $("#recMeta").textContent="录音时请保持屏幕常亮，不要切到别的 App";
+    segments=[];hideProg();clearErr();
+    window.scrollTo({top:0,behavior:"smooth"});
+  });
+
+  window.__ll={toWavChunks:toWavChunks,resample:resample,encodeWav:encodeWav};
+
+  window.addEventListener("beforeunload",e=>{
+    if(recording){ e.preventDefault(); e.returnValue=""; }
+  });
+})();
+</script>
+</body>
+</html>
